@@ -122,6 +122,36 @@ Capistrano::Configuration.instance(true).load do |configuration|
             set :branch, newStagingTag
         end
 
+        desc "Push the passed staging tag to demo_vagrant. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
+        task :tag_demo_vagrant do
+            promoteToDemoTag = configuration[:tag]
+            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToDemoTag
+            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToDemoTag =~ /staging-.*/
+            raise "Staging Tag #{promoteToDemoTag} does not exist." unless last_tag_matching(promoteToDemoTag)
+            
+            promoteToDemoTag =~ /staging-([0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]*)/
+            newDemoTag = "demo_vagrant-#{$1}"
+            puts "promoting staging tag #{promoteToDemoTag} to demo_vagrant as '#{newDemoTag}'"
+            system "git tag -a -m 'tagging current code for deployment to demo_vagrant' #{newDemoTag} #{promoteToDemoTag}"
+
+            set :branch, newDemoTag
+        end
+
+        desc "Push the passed staging tag to demo_firehost. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
+        task :tag_demo_firehost do
+            promoteToDemoTag = configuration[:tag]
+            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToDemoTag
+            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToDemoTag =~ /staging-.*/
+            raise "Staging Tag #{promoteToDemoTag} does not exist." unless last_tag_matching(promoteToDemoTag)
+            
+            promoteToDemoTag =~ /staging-([0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]*)/
+            newDemoTag = "demo_firehost-#{$1}"
+            puts "promoting staging tag #{promoteToDemoTag} to demo_firehost as '#{newDemoTag}'"
+            system "git tag -a -m 'tagging current code for deployment to demo_firehost' #{newDemoTag} #{promoteToDemoTag}"
+
+            set :branch, newDemoTag
+        end
+
         desc "Push the passed staging tag to demo. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
         task :tag_demo do
             promoteToDemoTag = configuration[:tag]
