@@ -22,10 +22,6 @@ Capistrano::Configuration.instance(true).load do |configuration|
             return last_tag_matching('staging-*')
         end
 
-        def last_demo_tag()
-            return last_tag_matching('demo-*')
-        end
-
         def last_production_tag()
             return last_tag_matching('production-*')
         end
@@ -57,8 +53,6 @@ Capistrano::Configuration.instance(true).load do |configuration|
             # do different things based on stage
             if (stage == :production or stage = :production_vagrant)
                 fromTag = last_tag_matching("#{stage}-*")
-            elsif stage == :demo
-                fromTag = last_demo_tag
             elsif (stage == :staging or stage = :staging_vagrant)
                 fromTag = last_tag_matching("#{stage}-*")
             else
@@ -71,8 +65,6 @@ Capistrano::Configuration.instance(true).load do |configuration|
                 puts "Calculating 'end' tag for :update_log for '#{stage}'"
                 # do different things based on stage
                 if (stage == :production or stage = :production_vagrant)
-                    toTag = last_staging_tag
-                elsif stage == :demo
                     toTag = last_staging_tag
                 elsif (stage == :staging or stage = :staging_vagrant)
                     toTag = 'head'
