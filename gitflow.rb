@@ -26,6 +26,10 @@ Capistrano::Configuration.instance(true).load do |configuration|
             return last_tag_matching('demo-*')
         end
 
+        def last_uat_tag()
+            return last_tag_matching('uat-*')
+        end
+
         def last_production_tag()
             return last_tag_matching('production-*')
         end
@@ -61,6 +65,8 @@ Capistrano::Configuration.instance(true).load do |configuration|
                 fromTag = last_demo_tag
             elsif (stage == :staging or stage = :staging_vagrant)
                 fromTag = last_tag_matching("#{stage}-*")
+            elsif (stage == :uat or stage = :uat_vagrant)
+                fromTag = last_tag_matching("#{stage}-*")
             else
                 raise "Unsupported stage #{stage}"
             end
@@ -73,6 +79,8 @@ Capistrano::Configuration.instance(true).load do |configuration|
                 if (stage == :production or stage = :production_vagrant)
                     toTag = last_staging_tag
                 elsif stage == :demo
+                    toTag = last_staging_tag
+                elsif (stage == :uat or stage = :uat_vagrant)
                     toTag = last_staging_tag
                 elsif (stage == :staging or stage = :staging_vagrant)
                     toTag = 'head'
@@ -128,7 +136,7 @@ Capistrano::Configuration.instance(true).load do |configuration|
             raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToDemoTag
             raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToDemoTag =~ /staging-.*/
             raise "Staging Tag #{promoteToDemoTag} does not exist." unless last_tag_matching(promoteToDemoTag)
-            
+
             promoteToDemoTag =~ /staging-([0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]*)/
             newDemoTag = "demo_vagrant-#{$1}"
             puts "promoting staging tag #{promoteToDemoTag} to demo_vagrant as '#{newDemoTag}'"
@@ -143,13 +151,28 @@ Capistrano::Configuration.instance(true).load do |configuration|
             raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToDemoTag
             raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToDemoTag =~ /staging-.*/
             raise "Staging Tag #{promoteToDemoTag} does not exist." unless last_tag_matching(promoteToDemoTag)
-            
+
             promoteToDemoTag =~ /staging-([0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]*)/
             newDemoTag = "demo-#{$1}"
             puts "promoting staging tag #{promoteToDemoTag} to demo as '#{newDemoTag}'"
             system "git tag -a -m 'tagging current code for deployment to demo' #{newDemoTag} #{promoteToDemoTag}"
 
             set :branch, newDemoTag
+        end
+
+        desc "Push the passed staging tag to uat. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
+        task :tag_uat do
+            promoteToUatTag = configuration[:tag]
+            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToUatTag
+            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToUatTag =~ /staging-.*/
+            raise "Staging Tag #{promoteToUatTag} does not exist." unless last_tag_matching(promoteToUatTag)
+
+            promoteToUatTag =~ /staging-([0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]*)/
+            newUatTag = "uat-#{$1}"
+            puts "promoting staging tag #{promoteToUatTag} to uat as '#{newUatTag}'"
+            system "git tag -a -m 'tagging current code for deployment to uat' #{newUatTag} #{promoteToUatTag}"
+
+            set :branch, newUatTag
         end
 
         desc "Push the passed staging tag to production. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
@@ -196,6 +219,21 @@ Capistrano::Configuration.instance(true).load do |configuration|
             end
 
             set :branch, newStagingTag
+        end
+
+        desc "Push the passed staging tag to uat_vagrant. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
+        task :tag_uat_vagrant do
+            promoteToUatTag = configuration[:tag]
+            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToUatTag
+            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToUatTag =~ /staging-.*/
+            raise "Staging Tag #{promoteToUatTag} does not exist." unless last_tag_matching(promoteToUatTag)
+
+            promoteToUatTag =~ /staging-([0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]*)/
+            newUatTag = "uat_vagrant-#{$1}"
+            puts "promoting staging tag #{promoteToUatTag} to uat_vagrant as '#{newUatTag}'"
+            system "git tag -a -m 'tagging current code for deployment to uat_vagrant' #{newUatTag} #{promoteToUatTag}"
+
+            set :branch, newUatTag
         end
 
         desc "Push the passed staging tag to production_vagrant. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
